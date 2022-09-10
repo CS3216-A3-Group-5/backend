@@ -1,3 +1,5 @@
 from django.db import models
 
-# Create your models here.
+class Module(models.Model):
+    title = models.CharField(max_length=200)
+    module_code = models.CharField(max_length=10)
