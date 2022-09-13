@@ -12,6 +12,9 @@ class User(models.Model):
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
 
+    def __str__(self) -> str:
+        return self.name
+
 class Enrolment(models.Model):
     LOOKING = 'LF'
     WILLING = 'WH'
@@ -24,14 +27,14 @@ class Enrolment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=2,
         choices=STATUS_CHOICES,
         default=LOOKING,
     )
 
-class Connections(models.Model):
+class Connection(models.Model):
     ACCEPTED = 'AC'
     PENDING = 'PD'
     REJECTED = 'RJ'
@@ -43,9 +46,9 @@ class Connections(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    requester = models.ForeignKey(User, on_delete=models.CASCADE)
-    accepter = models.ForeignKey(User, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module)
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name= 'requester')
+    accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name= 'accepter')
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     dateTime = models.DateTimeField()
     status = models.CharField(
         max_length=2,

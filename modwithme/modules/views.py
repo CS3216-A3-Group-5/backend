@@ -1,3 +1,10 @@
 from django.shortcuts import render
+from rest_framework import viewsets
 
-# Create your views here.
+from .serializers import ModuleSerializer
+from .models import Module
+
+class ModuleViewSet(viewsets.ModelViewSet):
+    queryset = Module.objects.all().order_by('module_code')
+    serializer_class = ModuleSerializer
+    
