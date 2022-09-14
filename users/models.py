@@ -27,7 +27,7 @@ class Enrolment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=2,
         choices=STATUS_CHOICES,
@@ -46,9 +46,9 @@ class Connections(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    requester = models.ForeignKey(User, on_delete=models.CASCADE)
-    accepter = models.ForeignKey(User, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module)
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outgoing_connections')
+    accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='incoming_connections')
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     dateTime = models.DateTimeField()
     status = models.CharField(
         max_length=2,
