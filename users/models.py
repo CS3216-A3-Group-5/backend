@@ -1,5 +1,5 @@
 from django.db import models
-from modwithme.modules.models import Module
+from modules.models import Module
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
