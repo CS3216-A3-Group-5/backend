@@ -1,16 +1,19 @@
-from datetime import datetime
 from django.db import models
 from modwithme.modules.models import Module
+from django.contrib.auth.models import AbstractUser
 
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
+class User(AbstractUser):
     name = models.CharField(max_length=50)
     nus_email = models.EmailField(unique=True)
+    is_verified = models.BooleanField(default=False)
     telegram_id = models.CharField(max_length=20, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
     year = models.IntegerField(default=1)
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
+
+    USERNAME_FIELD = 'nus_email'
+    REQUIRED_FIELDS = []
 
 class Enrolment(models.Model):
     LOOKING = 'LF'
