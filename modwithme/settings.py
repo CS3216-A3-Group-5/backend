@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-emxy#xqq3k)z)b1%c^%9jj-wz85y*mji^u_(ozm&#nw8&7d71w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+]
 
 
 # Application definition
@@ -37,9 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'modwithme.users.apps.UsersConfig',
-    'modwithme.modules.apps.ModulesConfig',
     'rest_framework',
+    'users',
+    'modules'
 ]
 
 MIDDLEWARE = [
@@ -124,3 +127,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom Authentication
+AUTH_USER_MODEL = 'users.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ]
+}
