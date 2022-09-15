@@ -1,17 +1,18 @@
 from django.db import models
-from modules.models import Module
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
+from modules.models import Module
+
 class UserManager(BaseUserManager):
-    """A custom model manager for a User model that uses nus_email instead of username."""
+    """A custom model manager for the custom User model that uses nus_email instead of username."""
 
     use_in_migrations = True
 
     def _create_user(self, nus_email, password, **extra_fields):
-        """Create and save a User with the given nus_email and password."""
+        """Creates and saves a User with the given nus_email and password."""
 
         if not nus_email:
-            raise ValueError('The given email must be set')
+            raise ValueError('NUS Email must be given')
 
         nus_email = self.normalize_email(nus_email)
         user = self.model(nus_email=nus_email, **extra_fields)
@@ -21,7 +22,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_user(self, nus_email, password=None, **extra_fields):
-        """Create and save a regular User with the given nus_email and password."""
+        """Creates and saves a regular User with the given nus_email and password."""
 
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
@@ -29,15 +30,10 @@ class UserManager(BaseUserManager):
         return self._create_user(nus_email, password, **extra_fields)
 
     def create_superuser(self, nus_email, password, **extra_fields):
-        """Create and save a Superuser with the given nus_email and password."""
+        """Creates and saves a Superuser with the given nus_email and password."""
         
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(nus_email, password, **extra_fields)
 
