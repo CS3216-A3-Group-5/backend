@@ -21,9 +21,13 @@ class ModuleViewSet(viewsets.ReadOnlyModelViewSet):
 class ModuleUsersViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SimpleUserSerializer
 
+    
+    #requester = request.user
+
     def get_queryset(self):
         queryset = Enrolment.objects.all()
         module_code = self.kwargs['module_code']
+        print(module_code)
         queryset = queryset.filter(module__iexact=module_code)
         return queryset
 
