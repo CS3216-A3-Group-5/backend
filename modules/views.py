@@ -27,7 +27,6 @@ class ModuleUsersViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = Enrolment.objects.all()
         module_code = self.kwargs['module_code']
-        print(module_code)
         queryset = queryset.filter(module__iexact=module_code)
         return queryset
 
