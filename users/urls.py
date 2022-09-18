@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     path('token/', views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
 ]
