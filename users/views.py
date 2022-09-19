@@ -8,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from modules.serializers import ModuleSerializer
 
-from .serializers import TokenObtainPairSerializer
+from .serializers import TokenObtainPairSerializer, UserSerializer
 
 from modules.models import Module
 from .models import User, Enrolment, Connections
@@ -37,4 +37,14 @@ class StudentModulesView(APIView):
         
         queryset = paginator.paginate_queryset(modules, request)
         serializer = ModuleSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class StudentSelfView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        
+        user = request.user
+        
+        serializer = UserSerializer(user)
         return Response(serializer.data)

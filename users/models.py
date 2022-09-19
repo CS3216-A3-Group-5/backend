@@ -38,7 +38,7 @@ class UserManager(BaseUserManager):
         return self._create_user(nus_email, password, **extra_fields)
 
 class User(AbstractUser):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50) #not in use?
     nus_email = models.EmailField(unique=True)
     is_verified = models.BooleanField(default=False)
     telegram_id = models.CharField(max_length=20, blank=True)
