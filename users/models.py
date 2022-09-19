@@ -2,6 +2,7 @@ import math, random
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.mail import send_mail
+from django.utils import timezone
 
 from modules.models import Module
 
@@ -124,5 +125,9 @@ class VerificationCode(models.Model):
             [self.user.nus_email],
             fail_silently=False,
         )
+    
+    def is_expired(self):
+        time_delta = timezone.now() - self.creation_time
+        return time_delta.total_seconds() > 60
 
     objects = VerificationCodeManager()
