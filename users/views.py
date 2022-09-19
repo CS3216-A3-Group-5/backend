@@ -41,18 +41,15 @@ class OtpVerifyView(APIView):
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email, code=code).first()
 
         if user is None:
-            return Response({
-                'error_code': 1,
-                'error_message': 'The email is not registered.'
-            })        
+            return Response()
         elif verification_code is None:
             return Response({
-                'error_code': 2,
+                'error_code': 1,
                 'error_message': 'Wrong OTP.'
             })
         elif verification_code.is_expired():
             return Response({
-                'error_code': 3,
+                'error_code': 2,
                 'error_message': 'OTP has expired.'
             })
         
@@ -74,14 +71,13 @@ class OtpSendView(APIView):
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email).first()
 
         if not user:
-            return Response({
-                'error_code': 1,
-                'error_message': 'The email is not registered.'
-            })
+            return Response()
+        elif user.is_verified:
+            return Response()
         elif verification_code and not verification_code.is_expired():
             remaining_time = round(verification_code.remaining_time())
             return Response({
-                'error_code': 2,
+                'error_code': 1,
                 'error_message': f'Please wait {remaining_time} seconds before re-sending the OTP.'
             })
         elif verification_code:
