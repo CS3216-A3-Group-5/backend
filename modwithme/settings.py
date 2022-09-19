@@ -163,3 +163,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # TODO: remove 
 
 SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
+# OTP
+OTP_EXPIRATION_DURATION = 60

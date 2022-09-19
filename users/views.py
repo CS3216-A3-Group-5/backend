@@ -13,7 +13,7 @@ class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        nus_email = request.get('nus_email')
+        nus_email = request.data.get('nus_email')
         nus_email_is_already_used = User.objects.filter(nus_email=nus_email).exists()
 
         if nus_email_is_already_used:
@@ -31,11 +31,11 @@ class RegisterView(generics.GenericAPIView):
 
         return Response()
 
-class VerifyView(APIView):
+class OtpVerifyView(APIView):
     def post(self, request, *args, **kwargs):
-        nus_email = request.get('nus_email')
-        code = request.get('otp')
-        
+        nus_email = request.data.get('nus_email')
+        code = request.data.get('otp')
+
         user = User.objects.filter(nus_email=nus_email).first()
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email, code=code).first()
 
@@ -57,6 +57,31 @@ class VerifyView(APIView):
         
         return Response()
 
+class OtpSendView(APIView):
+    def post(self, request, *args, **kwargs):
+        nus_email = request.data.get('nus_email')
+        user = User.objects.filter(nus_email=nus_email).first()
+        verification_code = VerificationCode.objects.filter(user__nus_email=nus_email).first()
+
+        if not user:
+            return Response({
+                'error_code': 1,
+                'error_message': 'The email is not registered.'
+            })
+        elif verification_code and not verification_code.is_expired():
+            remaining_time = verification_code.remaining_time()
+            return Response({
+                'error_code': 2,
+                'error_message': f'Please wait {remaining_time} before re-sending the OTP.'
+            })
+        elif verification_code:
+            verification_code.delete()
+        
+        verification_code = VerificationCode.objects.create(user=user)
+        verification_code.send()
+
+        return Response()
+
 class LoginView(TokenObtainPairView):
     """Takes a set of user credentials. 
     If the credentials are valid and the user's NUS Email is verified, 
@@ -65,8 +90,8 @@ class LoginView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        nus_email = request.get('nus_email')
-        password = request.get('password')
+        nus_email = request.data.get('nus_email')
+        password = request.data.get('password')
         
         user = authenticate(request, nus_email=nus_email, password=password)
 

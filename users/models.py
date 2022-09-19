@@ -1,5 +1,6 @@
 import math, random
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -126,8 +127,14 @@ class VerificationCode(models.Model):
             fail_silently=False,
         )
     
-    def is_expired(self):
+    def remaining_time(self):
+        return settings.OTP_EXPIRATION_DURATION - self.elapsed_time()
+
+    def elapsed_time(self):
         time_delta = timezone.now() - self.creation_time
-        return time_delta.total_seconds() > 60
+        return time_delta.total_seconds()
+    
+    def is_expired(self):
+        return self.elapsed_time() > settings.OTP_EXPIRATION_DURATION
 
     objects = VerificationCodeManager()
