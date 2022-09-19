@@ -1,40 +1,19 @@
-from enum import Enum
-from unicodedata import name
-from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from rest_framework import exceptions
-from rest_framework.fields import CurrentUserDefault
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
-
-from django.contrib.auth import authenticate
-
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
-from .models import Connections, User, Enrolment
+from .models import Connections, User
 
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'nus_email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
 
-class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    def validate(self, attrs):
-        nus_email = attrs.get('nus_email')
-        password = attrs.get('password')
-        try:
-            request = self.context["request"]
-        except KeyError:
-            pass
-        
-        user = authenticate(request, nus_email=nus_email, password=password)
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['nus_email'], validated_data['password'])
 
-        if not user:
-            return {
-                'error_code': 1,
-                'error_message': 'Email and/or password is incorrect.'
-            }
-
-        return super().validate(attrs)
-
-
+        return user
 
 class SimpleUserSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50, source='user.username')

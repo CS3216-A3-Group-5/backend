@@ -133,6 +133,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom Authentication
 AUTH_USER_MODEL = 'users.User'
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -142,12 +150,18 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-}
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # TODO: remove in production
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # TODO: enable in production
+# EMAIL_HOST = 'mail.privateemail.com'
+# EMAIL_HOST_USER = 'contact@mydomain.com'
+# EMAIL_HOST_PASSWORD = '***********'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_USE_SSl = False
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
+# OTP
+OTP_EXPIRATION_DURATION = 60
