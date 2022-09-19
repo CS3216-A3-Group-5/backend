@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, VerificationCode
 from .serializers import RegisterSerializer
@@ -55,7 +56,16 @@ class OtpVerifyView(APIView):
                 'error_message': 'OTP has expired.'
             })
         
-        return Response()
+        user.is_verified = True
+        user.save()
+        verification_code.delete()
+
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        })
 
 class OtpSendView(APIView):
     def post(self, request, *args, **kwargs):
