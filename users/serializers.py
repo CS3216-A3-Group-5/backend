@@ -7,25 +7,30 @@ from rest_framework import exceptions
 from rest_framework.fields import CurrentUserDefault
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
+from django.contrib.auth import authenticate
+
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
 from .models import Connections, User, Enrolment
 
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    default_error_messages = {
-        'nus_email_unverified': _('NUS Email is not verified')
-    }
-
     def validate(self, attrs):
         nus_email = attrs.get('nus_email')
-        user = User.objects.filter(nus_email=nus_email).first()
+        password = attrs.get('password')
+        try:
+            request = self.context["request"]
+        except KeyError:
+            pass
         
-        if user and not user.is_verified:
-            raise exceptions.AuthenticationFailed(
-                self.error_messages['nus_email_unverified'],
-                'nus_email_unverified',
-            )
+        user = authenticate(request, nus_email=nus_email, password=password)
+
+        if not user:
+            return {
+                'error_code': 1,
+                'error_message': 'Email and/or password is incorrect.'
+            }
 
         return super().validate(attrs)
 
