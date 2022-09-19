@@ -136,6 +136,7 @@ AUTH_USER_MODEL = 'users.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication', # TODO: remove in production
     ],
     #'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': 20
@@ -149,3 +150,4 @@ SIMPLE_JWT = {
 }
 
 SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
+
