@@ -24,6 +24,17 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
         return super().validate(attrs)
 
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'nus_email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['nus_email'], validated_data['password'])
+
+        return user
+
 class SimpleUserSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50, source='user.name')
     user_status = serializers.SerializerMethodField() #serializers.IntegerField() # based on module

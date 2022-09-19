@@ -38,6 +38,7 @@ class UserManager(BaseUserManager):
         return self._create_user(nus_email, password, **extra_fields)
 
 class User(AbstractUser):
+    username = None
     name = models.CharField(max_length=50)
     nus_email = models.EmailField(unique=True)
     is_verified = models.BooleanField(default=False)
