@@ -1,28 +1,8 @@
 from django.contrib.auth import authenticate
 from rest_framework import exceptions
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
 from .models import User
-
-class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    def validate(self, attrs):
-        nus_email = attrs.get('nus_email')
-        password = attrs.get('password')
-        try:
-            request = self.context["request"]
-        except KeyError:
-            pass
-        
-        user = authenticate(request, nus_email=nus_email, password=password)
-
-        if not user:
-            return {
-                'error_code': 1,
-                'error_message': 'Email and/or password is incorrect.'
-            }
-
-        return super().validate(attrs)
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
