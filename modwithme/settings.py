@@ -145,7 +145,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication', # TODO: remove in production
-    ]
+    ],
+    #'DEFAULT_PAGINATION_CLASS': None,
+    'PAGE_SIZE': 20
 }
 
 # Email
@@ -158,3 +160,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # TODO: remove 
 # EMAIL_USE_TLS = True
 # EMAIL_USE_SSl = False
 # DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
+
