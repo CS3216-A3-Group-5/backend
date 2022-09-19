@@ -1,10 +1,8 @@
 from django.contrib.auth import authenticate
-from rest_framework import generics, permissions, status
+from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.views import APIView
 
 from .models import User
 from .serializers import RegisterSerializer
@@ -26,6 +24,8 @@ class RegisterView(generics.GenericAPIView):
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        # TODO: send verification email
 
         return Response()
 
