@@ -69,10 +69,10 @@ class OtpSendView(APIView):
                 'error_message': 'The email is not registered.'
             })
         elif verification_code and not verification_code.is_expired():
-            remaining_time = verification_code.remaining_time()
+            remaining_time = round(verification_code.remaining_time())
             return Response({
                 'error_code': 2,
-                'error_message': f'Please wait {remaining_time} before re-sending the OTP.'
+                'error_message': f'Please wait {remaining_time} seconds before re-sending the OTP.'
             })
         elif verification_code:
             verification_code.delete()
