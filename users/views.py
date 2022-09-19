@@ -1,7 +1,7 @@
 from django.db.models import Q
 
 from rest_framework_simplejwt.views import TokenObtainPairView as JwtTokenObtainPairView
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -47,4 +47,24 @@ class StudentSelfView(APIView):
         user = request.user
         
         serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+class StudentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, id):
+        user = request.user
+        try:
+            target = User.objects.get(id__exact=id)
+        except:
+            return Response("Invalid user id", status=status.HTTP_404_NOT_FOUND)
+
+        if user == target:
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+
+        if not Connections.objects.filter(Q(requester=user, accepter=target) | Q(requester=target, accepter=user)).exists():
+            return Response("No connection with this user", status=status.HTTP_401_UNAUTHORIZED)
+        
+        serializer = UserSerializer(target)
         return Response(serializer.data)
