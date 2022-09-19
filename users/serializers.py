@@ -30,10 +30,8 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 class SimpleUserSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50, source='user.username')
-    user_status = serializers.SerializerMethodField() #serializers.IntegerField() # based on module
-    connection_status = serializers.SerializerMethodField() #serializers.IntegerField() #based on module and user token
-    #connection_status = serializers.PrimaryKeyRelatedField(queryset = )
-    #print(CurrentUserDefault())
+    user_status = serializers.SerializerMethodField()  # based on module
+    connection_status = serializers.SerializerMethodField()  #based on module and user token
 
     def get_user_status(self, obj):
         if obj.status == 'LF':
@@ -50,13 +48,12 @@ class SimpleUserSerializer(serializers.Serializer):
         # else no connection
         user = None
         user = self.context.get("user")
-        
         if not user.id:
-            return 0
+            return 999
 
         queryset = Connections.objects.filter(Q(requester=user) | Q(accepter=user))
         try:
-            record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj))
+            record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj.user))
             if record.status == 'AC':
                 return 2
             elif record.status == 'PD':
@@ -64,13 +61,11 @@ class SimpleUserSerializer(serializers.Serializer):
             else:
                 return 0
 
-        except:
-            return 20
-
-        return 0
+        except Exception as e:
+            print(e)
+            return 999
     
 class UserSerializer(serializers.ModelSerializer):
-    #enrolment = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = User
         fields = ('username, nus_email', 'enrolment')

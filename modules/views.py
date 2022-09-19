@@ -22,7 +22,7 @@ class ModuleViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query))
         return queryset
 
-
+'''
 class ModuleUsersViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = SimpleUserSerializer()
     permission_classes = [permissions.IsAuthenticated]
@@ -34,11 +34,12 @@ class ModuleUsersViewSet(viewsets.ReadOnlyModelViewSet):
         module_code = self.kwargs['module_code']
         queryset = queryset.filter(module__module_code__iexact=module_code)
         return queryset
+'''
 
 class ModuleUsersView(APIView):
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request, module_code, format=None):
-        enrolments = Enrolment.objects.all().filter(module__module_code__iexact=module_code)
+        enrolments = Enrolment.objects.all().filter(Q(module__module_code__iexact=module_code), ~Q(user__exact=request.user))
         serializer = SimpleUserSerializer(enrolments, many=True, context={'user': request.user})
         return Response(serializer.data)
 
