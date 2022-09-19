@@ -1,7 +1,8 @@
+import json
 from django.db.models import Q
 
 from rest_framework_simplejwt.views import TokenObtainPairView as JwtTokenObtainPairView
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -12,6 +13,7 @@ from .serializers import TokenObtainPairSerializer, UserSerializer
 
 from modules.models import Module
 from .models import User, Enrolment, Connections
+from modules.views import User_Status, Connection_Status
 
 class TokenObtainPairView(JwtTokenObtainPairView):
     """Custom TokenObtainPairView. 
@@ -79,3 +81,52 @@ class StudentDetailView(APIView):
         
         serializer = UserSerializer(target)
         return Response(serializer.data)
+
+class StudentEnrollView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, format=None):
+        self.http_method_names.append("post")
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            module_code = obj["module_code"]
+            module = Module.objects.get(module_code=module_code)
+            user_status = obj["status"]
+            user_status = User_Status(user_status).name
+
+            if Enrolment.objects.filter(user=user, module=module).exists():
+                return Response('User is already enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            
+            enrolment = Enrolment(user=user, module=module, status=user_status)
+            enrolment.save()
+
+            return Response("Successfully enrolled")
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            module_code = obj["module_code"]
+            module = Module.objects.get(module_code=module_code)
+
+            enrolment = Enrolment.objects.filter(user=user, module=module)
+
+            if not enrolment.exists:
+                return Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            
+            enrolment.delete()
+
+            return Response("Successfully deleted")
+
+        except:
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+

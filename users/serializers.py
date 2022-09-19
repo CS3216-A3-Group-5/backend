@@ -78,4 +78,3 @@ class SimpleUserSerializer(serializers.Serializer):
         else:
             return 0
 
-        
