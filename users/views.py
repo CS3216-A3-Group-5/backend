@@ -1,6 +1,17 @@
+from django.db.models import Q
+
 from rest_framework_simplejwt.views import TokenObtainPairView as JwtTokenObtainPairView
+from rest_framework import viewsets, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+
+from modules.serializers import ModuleSerializer
 
 from .serializers import TokenObtainPairSerializer
+
+from modules.models import Module
+from .models import User, Enrolment, Connections
 
 class TokenObtainPairView(JwtTokenObtainPairView):
     """Custom TokenObtainPairView. 
@@ -9,3 +20,21 @@ class TokenObtainPairView(JwtTokenObtainPairView):
     returns an access and refresh JSON web token pair."""
 
     serializer_class = TokenObtainPairSerializer
+
+class StudentModulesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        search_query = request.query_params.get('q')
+        paginator = PageNumberPagination()
+        
+        enrolment = Enrolment.objects.filter(user__exact=request.user).select_related('module')
+
+        modules = Module.objects.filter(id__in=enrolment.values('module'))
+
+        if search_query is not None:
+            modules = modules.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query))
+        
+        queryset = paginator.paginate_queryset(modules, request)
+        serializer = ModuleSerializer(queryset, many=True)
+        return Response(serializer.data)

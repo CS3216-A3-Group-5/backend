@@ -38,6 +38,9 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 class SimpleUserSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50, source='user.username')
+    year = serializers.IntegerField(default=1, source='user.year')
+    major = serializers.CharField(max_length=20, source='user.major')
+    bio = serializers.CharField(source='user.bio')
     user_status = serializers.SerializerMethodField()  # based on module
     connection_status = serializers.SerializerMethodField()  #based on module and user token
 
