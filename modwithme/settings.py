@@ -137,7 +137,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication', # TODO: remove in production
-    ]
+    ],
+    #'DEFAULT_PAGINATION_CLASS': None,
+    'PAGE_SIZE': 20
 }
 
 SIMPLE_JWT = {
@@ -146,3 +148,6 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
+

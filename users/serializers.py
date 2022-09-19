@@ -1,9 +1,19 @@
-from django.contrib.auth import authenticate
+from enum import Enum
+from unicodedata import name
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions
+from rest_framework.fields import CurrentUserDefault
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
+
+from django.contrib.auth import authenticate
+
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 
-from .models import User
+from .models import Connections, User, Enrolment
+
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
     def validate(self, attrs):
@@ -24,12 +34,14 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
         return super().validate(attrs)
 
-class SimpleUserSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=50, source='user.name')
-    user_status = serializers.SerializerMethodField() #serializers.IntegerField() # based on module
-    connection_status = serializers.SerializerMethodField() #serializers.IntegerField() #based on module and user token
 
-    def user_status(self, obj):
+
+class SimpleUserSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=50, source='user.username')
+    user_status = serializers.SerializerMethodField()  # based on module
+    connection_status = serializers.SerializerMethodField()  #based on module and user token
+
+    def get_user_status(self, obj):
         if obj.status == 'LF':
             return 1
         elif obj.status == 'WH':
@@ -37,10 +49,23 @@ class SimpleUserSerializer(serializers.Serializer):
         else:
             return 0
         
-    def connection_status(self, obj):
-        # get Connections table filtered by sender or receiver being user making api request
+    def get_connection_status(self, obj):
+        # get Connections table filtered by requester or accepter being user making api request
         # for each user, check if in this filtered table
         # if in table, return connection status
         # else no connection
-        return 0
-    
+        user = None
+        user = self.context.get('user')
+        module_code = self.context.get('module_code')
+
+        queryset = Connections.objects.filter(Q(requester=user) | Q(accepter=user), module__module_code__iexact=module_code)
+
+        record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj.user))
+        if record.status == 'AC':
+            return 2
+        elif record.status == 'PD':
+            return 1
+        else:
+            return 0
+
+        
