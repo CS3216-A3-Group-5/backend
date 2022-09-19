@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
+import requests
+
 from .serializers import ModuleSerializer
 from users.serializers import SimpleUserSerializer
 from .models import Module
@@ -65,3 +67,17 @@ class ModuleUsersView(APIView):
         serializer = SimpleUserSerializer(queryset, many=True, context={'user': request.user, 'module_code': module_code})
         return Response(serializer.data)
 
+class ModuleUpdateView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, academic_year):
+        url = 'https://www.api.nusmods.com/v2/' + academic_year + '/moduleList.json'
+        r = requests.get(url)
+        data = r.json()
+
+        for module in data:
+            new_module_code = module["moduleCode"]
+            new_title = module["title"]
+            new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
+            new_module.save()
+        return Response(data)
