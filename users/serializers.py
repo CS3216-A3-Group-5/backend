@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate
-from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
@@ -7,12 +6,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as Jw
 from .models import User
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    default_error_messages = {
-        'email_not_registered': _('NUS Email is not registered'),
-        'invalid_password': _('Password is invalid'),
-        'email_not_verified': _('NUS Email is not verified')
-    }
-
     def validate(self, attrs):
         nus_email = attrs.get('nus_email')
         password = attrs.get('password')
@@ -20,24 +13,14 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
             request = self.context["request"]
         except KeyError:
             pass
-        user = authenticate(request, nus_email=nus_email, password=password)
-        nus_email_is_registered = User.objects.filter(nus_email=nus_email).exists()
         
-        if not nus_email_is_registered:
-            raise exceptions.AuthenticationFailed(
-                self.error_messages['email_not_registered'],
-                'email_not_registered'
-            )
-        elif not user:
-            raise exceptions.AuthenticationFailed(
-                self.error_messages['invalid_password'],
-                'invalid_password'
-            )
-        elif not user.is_verified:
-            raise exceptions.AuthenticationFailed(
-                self.error_messages['email_not_verified'],
-                'email_not_verified'
-            )
+        user = authenticate(request, nus_email=nus_email, password=password)
+
+        if not user:
+            return {
+                'error_code': 1,
+                'error_message': 'Email and/or password is incorrect.'
+            }
 
         return super().validate(attrs)
 
