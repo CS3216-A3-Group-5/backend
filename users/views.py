@@ -4,15 +4,13 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import User
+from .models import User, VerificationCode
 from .serializers import RegisterSerializer
 
 class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
         nus_email = request.data['nus_email']
         nus_email_is_already_used = User.objects.filter(nus_email=nus_email).exists()
 
@@ -22,10 +20,12 @@ class RegisterView(generics.GenericAPIView):
                 'error_message': 'Email is already in use.'
             })
 
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
 
-        # TODO: send verification email
+        verification_code = VerificationCode.objects.create(user=user)
+        verification_code.send()
 
         return Response()
 

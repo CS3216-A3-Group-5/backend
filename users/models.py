@@ -1,5 +1,7 @@
+import math, random
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.mail import send_mail
 
 from modules.models import Module
 
@@ -94,4 +96,33 @@ class Connections(models.Model):
         default=PENDING,
     )
 
-    
+class VerificationCodeManager(models.Manager):
+    @classmethod
+    def generate_code(cls):
+        digits = '0123456789'
+        code = ''
+
+        for i in range(6):
+            code += digits[math.floor(random.random() * 10)]
+
+        return int(code)
+
+    def create(self, user):
+        code = VerificationCodeManager.generate_code()
+        return super().create(user=user, code=code)
+
+class VerificationCode(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification_code')
+    code = models.PositiveSmallIntegerField()
+    creation_time = models.DateTimeField(auto_now_add=True)
+
+    def send(self):
+        send_mail(
+            'Your verification code for Mod With Me',
+            f'Your verification code is: {self.code}',
+            'no-reply@modwithme.com',
+            [self.user.nus_email],
+            fail_silently=False,
+        )
+
+    objects = VerificationCodeManager()
