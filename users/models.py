@@ -1,6 +1,7 @@
 from enum import Enum
 import math, random
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.mail import send_mail
@@ -58,6 +59,16 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    def is_connected(self, other_user):
+        return self.get_connection_status_with(other_user) == 2
+    
+    def get_connection_status_with(self, other_user):
+        connection = Connection.objects.filter(Q(requester=self, accepter=other_user) | Q(requester=other_user, accepter=self)).first()
+        if connection is None:
+            return 0
+        
+        return Connection_Status[connection.status].value
 
 class Enrolment(models.Model):
     LOOKING = 'LF'

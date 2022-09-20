@@ -12,6 +12,8 @@ from modules import serializers
 
 from .models import Connection_Status, User, VerificationCode, Enrolment, Connection
 from .serializers import ConnectionSerializer, RegisterSerializer, UserSerializer
+from .permissions import IsSelf
+from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
 from modules.views import User_Status
@@ -134,41 +136,38 @@ class StudentModulesView(APIView):
         return Response(serializer.data)
 
 class StudentSelfView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSelf]
 
     def get(self, request):
-        
         user = request.user
-        
-        serializer = UserSerializer(user)
+        serializer = PrivateUserSerializer(user)
         return Response(serializer.data)
 
-    # Error updating
     def put(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        serializer = PrivateUserSerializer(user, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class StudentDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, id):
         user = request.user
-        try:
-            target = User.objects.get(id__exact=id)
-        except:
+        target_user = User.objects.filter(id=id).first()
+
+        if target_user is None:
             return Response("Invalid user id", status=status.HTTP_404_NOT_FOUND)
+        elif user == target_user:
+            serializer = PrivateUserSerializer(user)
+        elif user.is_connected(target_user):
+            serializer = PrivateUserSerializer(target_user, context={'user': request.user})
+        else:
+            serializer = UserSerializer(target_user, context={'user': request.user})
 
-        if user == target:
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-
-        if not Connection.objects.filter(Q(requester=user, accepter=target) | Q(requester=target, accepter=user)).exists():
-            return Response("No connection with this user", status=status.HTTP_401_UNAUTHORIZED)
-        
-        serializer = UserSerializer(target)
         return Response(serializer.data)
 
 class StudentEnrollView(generics.CreateAPIView):
