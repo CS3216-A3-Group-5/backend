@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import Connections, User
+from .models import Connection, User
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,7 +48,7 @@ class SimpleUserSerializer(serializers.Serializer):
         user = self.context.get('user')
         module_code = self.context.get('module_code')
 
-        queryset = Connections.objects.filter(Q(requester=user) | Q(accepter=user), module__module_code__iexact=module_code)
+        queryset = Connection.objects.filter(Q(requester=user) | Q(accepter=user), module__module_code__iexact=module_code)
 
         record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj.user))
         if record.status == 'AC':

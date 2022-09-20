@@ -12,7 +12,7 @@ import requests
 from .serializers import ModuleSerializer
 from users.serializers import SimpleUserSerializer
 from .models import Module
-from users.models import User, Enrolment, Connections
+from users.models import User, Enrolment, Connection
 
 from modules import serializers
 
@@ -57,7 +57,7 @@ class ModuleUsersView(APIView):
         
         if connection_status is not None:
             # all connections where request.user is involved in, for target module_code, and target connection_status
-            connections = Connections.objects.filter(Q(requester=request.user) | Q(accepter=request.user), module__module_code__iexact=module_code)
+            connections = Connection.objects.filter(Q(requester=request.user) | Q(accepter=request.user), module__module_code__iexact=module_code)
             status = Connection_Status(int(connection_status)).name
             connections = connections.filter(status__iexact=status)
             users = connections.values_list('requester', flat=True).union(connections.values_list('accepter', flat=True))

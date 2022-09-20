@@ -8,8 +8,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, VerificationCode, Enrolment, Connections
-from .serializers import RegisterSerializer, TokenObtainPairSerializer, UserSerializer
+from .models import User, VerificationCode, Enrolment, Connection
+from .serializers import RegisterSerializer, UserSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
 from modules.views import User_Status
@@ -163,7 +163,7 @@ class StudentDetailView(APIView):
             serializer = UserSerializer(user)
             return Response(serializer.data)
 
-        if not Connections.objects.filter(Q(requester=user, accepter=target) | Q(requester=target, accepter=user)).exists():
+        if not Connection.objects.filter(Q(requester=user, accepter=target) | Q(requester=target, accepter=user)).exists():
             return Response("No connection with this user", status=status.HTTP_401_UNAUTHORIZED)
         
         serializer = UserSerializer(target)

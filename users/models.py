@@ -76,7 +76,7 @@ class Enrolment(models.Model):
         default=LOOKING,
     )
 
-class Connections(models.Model):
+class Connection(models.Model):
     ACCEPTED = 'AC'
     PENDING = 'PD'
     REJECTED = 'RJ'
@@ -91,7 +91,7 @@ class Connections(models.Model):
     requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outgoing_connections')
     accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='incoming_connections')
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    dateTime = models.DateTimeField()
+    creation_time = models.DateTimeField()
     status = models.CharField(
         max_length=2,
         choices=CONNECTION_STATUS,
