@@ -291,7 +291,8 @@ class UserConnectionView(APIView):
 
             connection = Connection(requester=user, accepter=other_user, module=module, status='PD')
             connection.save()
-            return Response('Connection successfully created.')
+            serializer = ConnectionSerializer(connection, context={'user': user})
+            return Response(serializer.data)
 
         except Exception as e:
             print(e)
