@@ -296,3 +296,27 @@ class UserConnectionView(APIView):
         except Exception as e:
             print(e)
             return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, format=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            connection_id = obj["id"]
+            new_status = Connection_Status(int(obj["status"])).name 
+            
+
+            connection = Connection.objects.filter(id=connection_id)
+            if not connection.exists():
+                return Response('No match for connection id', status=status.HTTP_404_NOT_FOUND)
+            elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.name:
+                return Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            
+            connection.update(status=new_status)
+
+            return Response("Successfully updated status")
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
