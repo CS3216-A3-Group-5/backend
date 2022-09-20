@@ -1,3 +1,4 @@
+from enum import Enum
 import math, random
 from django.db import models
 from django.conf import settings
@@ -98,6 +99,15 @@ class Connection(models.Model):
         default=PENDING,
     )
 
+class User_Status(Enum):
+    NL = 0
+    LF = 1
+    WH = 2
+class Connection_Status(Enum):
+    RJ = 0
+    PD = 1
+    AC = 2
+    
 class VerificationCodeManager(models.Manager):
     @classmethod
     def generate_code(cls):

@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import Connection, User
+from .models import Connection, Connection_Status, Enrolment, User, User_Status
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,40 +21,30 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'nus_email', 'telegram_id', 'phone_number', 'year', 'major', 'bio']
 
 class SimpleUserSerializer(serializers.Serializer):
-    id = serializers.IntegerField(source = 'user.id')
-    username = serializers.CharField(max_length=50, source='user.username')
-    first_name = serializers.CharField(max_length=50, source='user.first_name')
-    last_name = serializers.CharField(max_length=50, source='user.last_name')
-    year = serializers.IntegerField(source='user.year')
-    major = serializers.CharField(max_length=20, source='user.major')
-    bio = serializers.CharField(source='user.bio')
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    first_name = serializers.CharField(max_length=50)
+    last_name = serializers.CharField(max_length=50)
     user_status = serializers.SerializerMethodField()  # based on module
     connection_status = serializers.SerializerMethodField()  #based on module and user token
 
     def get_user_status(self, obj):
-        if obj.status == 'LF':
-            return 1
-        elif obj.status == 'WH':
-            return 2
-        else:
-            return 0
+        module_code = self.context.get('module_code')
+        enrolment = Enrolment.objects.get(user=obj, module__module_code__iexact=module_code)
+        return User_Status[enrolment.status].value
         
     def get_connection_status(self, obj):
         # get Connections table filtered by requester or accepter being user making api request
         # for each user, check if in this filtered table
         # if in table, return connection status
         # else no connection
-        user = None
         user = self.context.get('user')
         module_code = self.context.get('module_code')
 
-        queryset = Connection.objects.filter(Q(requester=user) | Q(accepter=user), module__module_code__iexact=module_code)
-
-        record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj.user))
-        if record.status == 'AC':
-            return 2
-        elif record.status == 'PD':
-            return 1
+        queryset = Connection.objects.filter(Q(requester=user, accepter=obj) | Q(requester=obj, accepter=user), module__module_code__iexact=module_code)
+        if queryset.exists():
+            record = queryset.first()
+            return Connection_Status[record.status].value
         else:
             return 0
 
