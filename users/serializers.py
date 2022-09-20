@@ -17,8 +17,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     """Encapsulates a serializer that can serialize or deserialize a User with limited details."""
-    user_status = serializers.SerializerMethodField()  # based on module
-    connection_status = serializers.SerializerMethodField()  #based on module and user token
+    user_status = serializers.SerializerMethodField()  # the user's enrolment status in a module
+    connection_status = serializers.SerializerMethodField()  # the user's connection status with request.user
 
     class Meta:
         model = User

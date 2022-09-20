@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, VerificationCode, Enrolment, Connection
+from .permissions import IsSelf
 from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
@@ -132,20 +133,21 @@ class StudentModulesView(APIView):
         return Response(serializer.data)
 
 class StudentSelfView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSelf]
 
     def get(self, request):
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = PrivateUserSerializer(user)
         return Response(serializer.data)
 
-    # Error updating
     def put(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        serializer = PrivateUserSerializer(user, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class StudentDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
