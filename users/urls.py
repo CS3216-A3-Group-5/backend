@@ -10,4 +10,10 @@ urlpatterns = [
     path('logout/', jwt_views.TokenBlacklistView.as_view(), name='logout'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
+    path('user/modules/', views.StudentModulesView.as_view(), name='student_modules'),
+    path('user/', views.StudentSelfView.as_view(), name='student_self'),
+    path('user/<int:id>/', views.StudentDetailView.as_view(), name='student_detail'),
+    path('user/modules/enroll/', views.StudentEnrollView.as_view(), name='enroll_module'),
+    path('user/modules/status/', views.ModuleStatusView.as_view(), name='update_module_status'),
+    path('user/connections/', views.UserConnectionView.as_view(), name='user_connections'),
 ]

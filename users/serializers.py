@@ -2,7 +2,9 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from .models import Connections, User
+from modules.serializers import ModuleSerializer
+
+from .models import Connection, Connection_Status, Enrolment, User, User_Status
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,36 +17,77 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
-class SimpleUserSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=50, source='user.username')
-    user_status = serializers.SerializerMethodField()  # based on module
-    connection_status = serializers.SerializerMethodField()  #based on module and user token
+class SimpleUserSerializer(serializers.ModelSerializer):
+    """Encapsulates a serializer that can serialize or deserialize a User with limited details."""
+    user_status = serializers.SerializerMethodField()  # the user's enrolment status in a module
+    connection_status = serializers.SerializerMethodField()  # the user's connection status with request.user
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'name', 
+            'connection_status', 
+            'user_status',
+            'major',
+            'year',
+        ]
 
     def get_user_status(self, obj):
-        if obj.status == 'LF':
-            return 1
-        elif obj.status == 'WH':
-            return 2
-        else:
-            return 0
+        module_code = self.context.get('module_code')
+        enrolment = Enrolment.objects.get(user=obj, module__module_code__iexact=module_code)
+        return User_Status[enrolment.status].value
         
     def get_connection_status(self, obj):
-        # get Connections table filtered by requester or accepter being user making api request
-        # for each user, check if in this filtered table
-        # if in table, return connection status
-        # else no connection
-        user = None
         user = self.context.get('user')
-        module_code = self.context.get('module_code')
 
-        queryset = Connections.objects.filter(Q(requester=user) | Q(accepter=user), module__module_code__iexact=module_code)
-
-        record = queryset.get(Q(requester__exact=obj.user) | Q(accepter__exact=obj.user))
-        if record.status == 'AC':
-            return 2
-        elif record.status == 'PD':
-            return 1
-        else:
+        if user is None:
             return 0
 
+        return obj.get_connection_status_with(user)
+
+class ConnectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    module = ModuleSerializer()
+    other_user = serializers.SerializerMethodField()
+
+    def get_other_user(self, obj):
+        user = self.context.get('user')
+        if obj.requester == user:
+            other_user = obj.accepter
+        else:
+            other_user = obj.requester
+        return SimpleUserSerializer(other_user, context={'user': user, 'module_code': obj.module.module_code}).data
         
+
+class UserSerializer(SimpleUserSerializer):
+    """Encapsulates a serializer that can serialize or deserialize a User without contact details."""
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'name', 
+            'connection_status', 
+            'major',
+            'year',
+            'bio',
+        ]
+
+class PrivateUserSerializer(UserSerializer):
+    """Encapsulates a serializer that can serialize or deserialize a User with contact details."""
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 
+            'name', 
+            'connection_status', 
+            'major',
+            'year',
+            'nus_email', 
+            'telegram_id', 
+            'phone_number', 
+            'bio',
+        ]
+

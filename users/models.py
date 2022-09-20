@@ -1,5 +1,7 @@
+from enum import Enum
 import math, random
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.mail import send_mail
@@ -48,6 +50,7 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     telegram_id = models.CharField(max_length=20, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
+    #photo = models.ImageField(upload_to='profile_pictures', blank=True)
     year = models.IntegerField(default=1)
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
@@ -56,6 +59,16 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    def is_connected(self, other_user):
+        return self.get_connection_status_with(other_user) == 2
+    
+    def get_connection_status_with(self, other_user):
+        connection = Connection.objects.filter(Q(requester=self, accepter=other_user) | Q(requester=other_user, accepter=self)).first()
+        if connection is None:
+            return 0
+        
+        return Connection_Status[connection.status].value
 
 class Enrolment(models.Model):
     LOOKING = 'LF'
@@ -76,7 +89,7 @@ class Enrolment(models.Model):
         default=LOOKING,
     )
 
-class Connections(models.Model):
+class Connection(models.Model):
     ACCEPTED = 'AC'
     PENDING = 'PD'
     REJECTED = 'RJ'
@@ -91,13 +104,22 @@ class Connections(models.Model):
     requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outgoing_connections')
     accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='incoming_connections')
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    dateTime = models.DateTimeField()
+    creation_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=2,
         choices=CONNECTION_STATUS,
         default=PENDING,
     )
 
+class User_Status(Enum):
+    NL = 0
+    LF = 1
+    WH = 2
+class Connection_Status(Enum):
+    RJ = 0
+    PD = 1
+    AC = 2
+    
 class VerificationCodeManager(models.Manager):
     @classmethod
     def generate_code(cls):
