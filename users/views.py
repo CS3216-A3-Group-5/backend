@@ -264,7 +264,9 @@ class UserConnectionView(APIView):
             connections = connections.filter(status='AC')
 
         if module_code is not None:
-            connections = connections.filter(module__module_code__icontains=module_code)
+            enrolments = Enrolment.objects.filter(module__module_code__icontains=module_code)
+            users = enrolments.values_list('user', flat=True).distinct()
+            connections = connections.filter(Q(requester=user, accepter__in=users) | Q(accepter=user, requester__in=users))
         
         connections = connections.order_by('creation_time')
         

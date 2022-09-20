@@ -1,4 +1,5 @@
 from enum import Enum
+from multiprocessing import context
 from urllib import request
 from django.db.models import Q
 from django.shortcuts import render
@@ -87,9 +88,10 @@ class ModuleUpdateView(APIView):
 class ModuleView(APIView):
 
     def get(self, request, module_code):
+        user = request.user
         try:
             module = Module.objects.get(module_code__iexact=module_code)
-            serializer = ModuleSerializer(module)
+            serializer = ModuleSerializer(module, context={'user': user})
             return Response(serializer.data)
         except:
             return Response("Module not found.", status=status.HTTP_404_NOT_FOUND)

@@ -45,7 +45,7 @@ class SimpleUserSerializer(serializers.Serializer):
         user = self.context.get('user')
         module_code = self.context.get('module_code')
 
-        queryset = Connection.objects.filter(Q(requester=user, accepter=obj) | Q(requester=obj, accepter=user), module__module_code__iexact=module_code)
+        queryset = Connection.objects.filter(Q(requester=user, accepter=obj) | Q(requester=obj, accepter=user))
         if queryset.exists():
             record = queryset.first()
             return Connection_Status[record.status].value
