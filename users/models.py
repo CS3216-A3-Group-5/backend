@@ -49,6 +49,7 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     telegram_id = models.CharField(max_length=20, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
+    photo = models.ImageField(upload_to='profile_pictures', blank=True)
     year = models.IntegerField(default=1)
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
