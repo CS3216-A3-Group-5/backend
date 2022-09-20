@@ -180,7 +180,7 @@ class StudentEnrollView(generics.CreateAPIView):
         try:
             obj = data
             module_code = obj["module_code"]
-            module = Module.objects.get(module_code=module_code)
+            module = Module.objects.get(module_code__iexact=module_code)
             user_status = obj["status"]
             user_status = User_Status(user_status).name
 
@@ -203,7 +203,7 @@ class StudentEnrollView(generics.CreateAPIView):
         try:
             obj = data
             module_code = obj["module_code"]
-            module = Module.objects.get(module_code=module_code)
+            module = Module.objects.get(module_code__iexact=module_code)
 
             enrolment = Enrolment.objects.filter(user=user, module=module)
 

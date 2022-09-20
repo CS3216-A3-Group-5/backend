@@ -2,7 +2,7 @@ from enum import Enum
 from urllib import request
 from django.db.models import Q
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -78,3 +78,13 @@ class ModuleUpdateView(APIView):
             new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
             new_module.save()
         return Response(data)
+
+class ModuleView(APIView):
+
+    def get(self, request, module_code):
+        try:
+            module = Module.objects.get(module_code__iexact=module_code)
+            serializer = ModuleSerializer(module)
+            return Response(serializer.data)
+        except:
+            return Response("Module not found.", status=status.HTTP_404_NOT_FOUND)
