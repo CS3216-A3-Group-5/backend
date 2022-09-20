@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, VerificationCode, Enrolment, Connection
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
 from modules.views import User_Status
@@ -135,9 +135,7 @@ class StudentSelfView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        
         user = request.user
-        
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
@@ -154,19 +152,17 @@ class StudentDetailView(APIView):
 
     def get(self, request, id):
         user = request.user
-        try:
-            target = User.objects.get(id__exact=id)
-        except:
+        target_user = User.objects.filter(id=id).first()
+
+        if target_user is None:
             return Response("Invalid user id", status=status.HTTP_404_NOT_FOUND)
+        elif user == target_user:
+            serializer = PrivateUserSerializer(user)
+        elif user.is_connected(target_user):
+            serializer = PrivateUserSerializer(target_user, context={'user': request.user})
+        else:
+            serializer = UserSerializer(target_user, context={'user': request.user})
 
-        if user == target:
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-
-        if not Connection.objects.filter(Q(requester=user, accepter=target) | Q(requester=target, accepter=user)).exists():
-            return Response("No connection with this user", status=status.HTTP_401_UNAUTHORIZED)
-        
-        serializer = UserSerializer(target)
         return Response(serializer.data)
 
 class StudentEnrollView(generics.CreateAPIView):
