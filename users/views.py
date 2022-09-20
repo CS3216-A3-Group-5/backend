@@ -8,8 +8,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, VerificationCode, Enrolment, Connection
-from .serializers import RegisterSerializer, UserSerializer
+from modules import serializers
+
+from .models import Connection_Status, User, VerificationCode, Enrolment, Connection
+from .serializers import ConnectionSerializer, RegisterSerializer, UserSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
 from modules.views import User_Status
@@ -242,3 +244,31 @@ class ModuleStatusView(APIView):
         except Exception as e:
             print(e)
             return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+class UserConnectionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        connections = Connection.objects.filter(Q(accepter=user) | Q(requester=user), ~Q(status=Connection_Status['RJ'].value))
+
+        type = request.query_params.get('type')
+        print(connections)
+        module_code = request.query_params.get('module_code')
+        
+        if type is not None and type == '0':
+            connections = connections.filter(accepter=user, status='PD')
+            print(connections)
+        elif type is not None and type == '1':
+            connections = connections.filter(requester=user, status='PD')
+            print(connections)
+        elif type is not None and type == '2':
+            connections = connections.filter(status='AC')
+            print(connections)
+
+        if module_code is not None:
+            connections = connections.filter(module__module_code__icontains=module_code)
+        
+        serializer = ConnectionSerializer(connections, many=True, context={'user': user})
+        return Response(serializer.data)
