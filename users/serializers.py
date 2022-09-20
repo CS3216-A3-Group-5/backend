@@ -15,8 +15,19 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'nus_email', 'telegram_id', 'phone_number', 'year', 'major', 'bio']
+
 class SimpleUserSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=50, source='user.username')
+    id = serializers.IntegerField(source = 'user.id')
+    username = serializers.CharField(max_length=50, source='user.username')
+    first_name = serializers.CharField(max_length=50, source='user.first_name')
+    last_name = serializers.CharField(max_length=50, source='user.last_name')
+    year = serializers.IntegerField(source='user.year')
+    major = serializers.CharField(max_length=20, source='user.major')
+    bio = serializers.CharField(source='user.bio')
     user_status = serializers.SerializerMethodField()  # based on module
     connection_status = serializers.SerializerMethodField()  #based on module and user token
 
@@ -47,4 +58,3 @@ class SimpleUserSerializer(serializers.Serializer):
         else:
             return 0
 
-        
