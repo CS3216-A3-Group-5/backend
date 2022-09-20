@@ -25,6 +25,8 @@ class SimpleUserSerializer(serializers.Serializer):
     name = serializers.CharField()
     first_name = serializers.CharField(max_length=50)
     last_name = serializers.CharField(max_length=50)
+    year = serializers.IntegerField()
+    major = serializers.CharField()
     user_status = serializers.SerializerMethodField()  # based on module
     connection_status = serializers.SerializerMethodField()  #based on module and user token
 

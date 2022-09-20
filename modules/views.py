@@ -18,6 +18,11 @@ from modules import serializers
 
 class ModuleViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ModuleSerializer
+
+    def get_serializer_context(self):
+        context = super(ModuleViewSet, self).get_serializer_context()
+        context.update({'user': self.request.user})
+        return context
     
     def get_queryset(self):
         queryset = Module.objects.all().order_by('module_code')

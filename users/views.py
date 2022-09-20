@@ -128,7 +128,7 @@ class StudentModulesView(APIView):
             modules = modules.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query))
         
         queryset = paginator.paginate_queryset(modules, request)
-        serializer = ModuleSerializer(queryset, many=True)
+        serializer = ModuleSerializer(queryset, many=True, context={'user': request.user})
         return Response(serializer.data)
 
 class StudentSelfView(APIView):
@@ -181,8 +181,7 @@ class StudentEnrollView(generics.CreateAPIView):
             obj = data
             module_code = obj["module_code"]
             module = Module.objects.get(module_code__iexact=module_code)
-            user_status = obj["status"]
-            user_status = User_Status(user_status).name
+            user_status = User_Status(0).name
 
             if Enrolment.objects.filter(user=user, module=module).exists():
                 return Response('User is already enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -217,3 +216,29 @@ class StudentEnrollView(generics.CreateAPIView):
         except:
             return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
 
+class ModuleStatusView(APIView):
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, format=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            module_code = obj["module_code"]
+            module = Module.objects.get(module_code__iexact=module_code)
+            user_status = obj["status"]
+            user_status = User_Status(user_status).name
+            
+            enrolment = Enrolment.objects.filter(user=user, module=module)
+            if not enrolment.exists():
+                return Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            
+            enrolment.update(status=user_status)
+
+            return Response("Successfully updated status")
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
