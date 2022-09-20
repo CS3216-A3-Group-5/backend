@@ -254,21 +254,45 @@ class UserConnectionView(APIView):
         connections = Connection.objects.filter(Q(accepter=user) | Q(requester=user), ~Q(status=Connection_Status['RJ'].value))
 
         type = request.query_params.get('type')
-        print(connections)
         module_code = request.query_params.get('module_code')
-        
+
         if type is not None and type == '0':
             connections = connections.filter(accepter=user, status='PD')
-            print(connections)
         elif type is not None and type == '1':
             connections = connections.filter(requester=user, status='PD')
-            print(connections)
         elif type is not None and type == '2':
             connections = connections.filter(status='AC')
-            print(connections)
 
         if module_code is not None:
             connections = connections.filter(module__module_code__icontains=module_code)
         
+        connections = connections.order_by('creation_time')
+        
         serializer = ConnectionSerializer(connections, many=True, context={'user': user})
         return Response(serializer.data)
+
+    def post(self, request, format=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            module_code = obj["module_code"]
+            module = Module.objects.get(module_code__iexact=module_code)
+            other_user_id = obj["other_user"]
+            other_user = User.objects.get(id=other_user_id)
+
+
+            connection = Connection.objects.filter(Q(requester=user, accepter=other_user) | Q(requester=other_user, accepter=user), module=module)
+            if connection.exists():
+                return Response('A connection between these 2 users already exists for this module.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            elif user.id == other_user_id:
+                return Response('Cannot connect user with themselves', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            connection = Connection(requester=user, accepter=other_user, module=module, status='PD')
+            connection.save()
+            return Response('Connection successfully created.')
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
