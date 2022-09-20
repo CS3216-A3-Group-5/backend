@@ -310,6 +310,8 @@ class UserConnectionView(APIView):
             connection = Connection.objects.filter(id=connection_id)
             if not connection.exists():
                 return Response('No match for connection id', status=status.HTTP_404_NOT_FOUND)
+            elif not connection.filter(Q(requester=user) | Q(accepter=user)).exists():
+                return Response('User not involved in connection.', status=status.HTTP_401_UNAUTHORIZED)
             elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.name:
                 return Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
             
