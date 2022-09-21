@@ -34,9 +34,6 @@ ALLOWED_HOSTS = [
     'goldfish-app-4g8cm.ondigitalocean.app',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -156,9 +153,10 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         # 'rest_framework.authentication.SessionAuthentication', # For debugging in development
     ],
-    #'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': 20
 }
+
+SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 # Email
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # For debugging in development
@@ -168,9 +166,6 @@ EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
 EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
-
-SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 # OTP
 OTP_EXPIRATION_DURATION = 300
@@ -182,3 +177,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Thumbnails
 THUMBNAIL_SIZE = (100, 100)
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True

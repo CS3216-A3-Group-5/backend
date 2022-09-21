@@ -1,3 +1,4 @@
+from urllib import response
 from django.db.models import Q
 from django.contrib.auth import authenticate
 from rest_framework import permissions, status, generics
@@ -27,10 +28,12 @@ class RegisterView(generics.GenericAPIView):
         nus_email_is_already_used = User.objects.filter(nus_email=nus_email).exists()
 
         if nus_email_is_already_used:
-            return Response({
+            response = Response({
                 'error_code': 1,
                 'error_message': 'Email is already in use.'
             })
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -39,7 +42,9 @@ class RegisterView(generics.GenericAPIView):
         verification_code = VerificationCode.objects.create(user=user)
         verification_code.send()
 
-        return Response()
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class OtpVerifyView(APIView):
     def post(self, request, *args, **kwargs):
@@ -50,17 +55,23 @@ class OtpVerifyView(APIView):
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email, code=code).first()
 
         if user is None:
-            return Response()
+            response = Response()
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         elif verification_code is None:
-            return Response({
+            response = Response({
                 'error_code': 1,
                 'error_message': 'Wrong OTP.'
             })
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         elif verification_code.is_expired():
-            return Response({
+            response = Response({
                 'error_code': 2,
                 'error_message': 'OTP has expired.'
             })
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         
         user.is_verified = True
         user.save()
@@ -68,10 +79,12 @@ class OtpVerifyView(APIView):
 
         refresh = RefreshToken.for_user(user)
         
-        return Response({
+        response = Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         })
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class OtpSendView(APIView):
     def post(self, request, *args, **kwargs):
@@ -80,22 +93,30 @@ class OtpSendView(APIView):
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email).first()
 
         if not user:
-            return Response()
+            response = Response()
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         elif user.is_verified:
-            return Response()
+            response = Response()
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         elif verification_code and not verification_code.can_resend():
             remaining_time = round(verification_code.remaining_time_to_resend())
-            return Response({
+            response = Response({
                 'error_code': 1,
                 'error_message': f'Please wait {remaining_time} seconds before re-sending the OTP.'
             })
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         elif verification_code:
             verification_code.delete()
         
         verification_code = VerificationCode.objects.create(user=user)
         verification_code.send()
 
-        return Response()
+        response = Response()
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class LoginView(TokenObtainPairView):
     """Takes a set of user credentials. 
@@ -111,12 +132,16 @@ class LoginView(TokenObtainPairView):
         user = authenticate(request, nus_email=nus_email, password=password)
 
         if not user:
-            return Response({
+            response = Response({
                 'error_code': 1,
                 'error_message': 'Email and/or password is incorrect.'
             })
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class StudentModulesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -134,7 +159,9 @@ class StudentModulesView(APIView):
         
         queryset = paginator.paginate_queryset(modules, request)
         serializer = ModuleSerializer(queryset, many=True, context={'user': request.user})
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class StudentSelfView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsSelf]
@@ -142,16 +169,22 @@ class StudentSelfView(APIView):
     def get(self, request):
         user = request.user
         serializer = PrivateUserSerializer(user)
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
     def put(self, request):
         user = request.user
         serializer = PrivateUserSerializer(user, data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            response = Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class StudentDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -169,7 +202,9 @@ class StudentDetailView(APIView):
         else:
             serializer = UserSerializer(target_user, context={'user': request.user})
 
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class StudentEnrollView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -186,16 +221,22 @@ class StudentEnrollView(generics.CreateAPIView):
             user_status = User_Status(0).name
 
             if Enrolment.objects.filter(user=user, module=module).exists():
-                return Response('User is already enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('User is already enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             
             enrolment = Enrolment(user=user, module=module, status=user_status)
             enrolment.save()
 
-            return Response("Successfully enrolled")
+            response = Response("Successfully enrolled")
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         except Exception as e:
             print(e)
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
     def delete(self, request=None):
         user = request.user
@@ -209,14 +250,20 @@ class StudentEnrollView(generics.CreateAPIView):
             enrolment = Enrolment.objects.filter(user=user, module=module)
 
             if not enrolment.exists:
-                return Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             
             enrolment.delete()
 
-            return Response("Successfully deleted")
+            response = Response("Successfully deleted")
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         except:
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
 class ModuleStatusView(APIView):
 
@@ -235,15 +282,21 @@ class ModuleStatusView(APIView):
             
             enrolment = Enrolment.objects.filter(user=user, module=module)
             if not enrolment.exists():
-                return Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('User is not enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             
             enrolment.update(status=user_status)
 
-            return Response("Successfully updated status")
+            response = Response("Successfully updated status")
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         except Exception as e:
             print(e)
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
 class ProfilePictureView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -251,22 +304,30 @@ class ProfilePictureView(APIView):
     def get(self, request):
         user = request.user
         serializer = ProfilePictureSerializer(user)
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
     def post(self, request):
         user = request.user
         serializer = ProfilePictureSerializer(user, data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            response = Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
         
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response = Response(serializer.data, status=status.HTTP_200_OK)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
     def delete(self, request):
         user = request.user
         user.profile_pic = None
         user.save()
-        return Response()
+        response = Response()
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class UserConnectionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -294,7 +355,9 @@ class UserConnectionView(APIView):
         connections = connections.order_by('creation_time')
         
         serializer = ConnectionSerializer(connections, many=True, context={'user': user})
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
     def post(self, request, format=None):
         user = request.user
@@ -310,18 +373,26 @@ class UserConnectionView(APIView):
 
             connection = Connection.objects.filter(Q(requester=user, accepter=other_user) | Q(requester=other_user, accepter=user), module=module)
             if connection.exists():
-                return Response('A connection between these 2 users already exists for this module.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('A connection between these 2 users already exists for this module.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             elif user.id == other_user_id:
-                return Response('Cannot connect user with themselves', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('Cannot connect user with themselves', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
 
             connection = Connection(requester=user, accepter=other_user, module=module, status='PD')
             connection.save()
             serializer = ConnectionSerializer(connection, context={'user': user})
-            return Response(serializer.data)
+            response = Response(serializer.data)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         except Exception as e:
             print(e)
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
     
     def put(self, request, format=None):
         user = request.user
@@ -335,16 +406,26 @@ class UserConnectionView(APIView):
 
             connection = Connection.objects.filter(id=connection_id)
             if not connection.exists():
-                return Response('No match for connection id', status=status.HTTP_404_NOT_FOUND)
+                response = Response('No match for connection id', status=status.HTTP_404_NOT_FOUND)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             elif not connection.filter(Q(requester=user) | Q(accepter=user)).exists():
-                return Response('User not involved in connection.', status=status.HTTP_401_UNAUTHORIZED)
+                response = Response('User not involved in connection.', status=status.HTTP_401_UNAUTHORIZED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.name:
-                return Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response['Access-Control-Allow-Origin'] = '*'
+                return response
             
             connection.update(status=new_status)
 
-            return Response("Successfully updated status")
+            response = Response("Successfully updated status")
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
 
         except Exception as e:
             print(e)
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response['Access-Control-Allow-Origin'] = '*'
+            return response
