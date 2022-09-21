@@ -258,3 +258,9 @@ class ProfilePictureView(APIView):
         
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        user.profile_pic = None
+        user.save()
+        return Response()

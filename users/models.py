@@ -1,13 +1,18 @@
-from enum import Enum
 import math, random
+import os.path
+from enum import Enum
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.files.base import ContentFile
 from django.core.mail import send_mail
 from django.utils import timezone
+from io import BytesIO
+from PIL import Image
 
 from modules.models import Module
+from modwithme.settings import THUMBNAIL_SIZE
 
 class UserManager(BaseUserManager):
     """A custom model manager for the custom User model that uses nus_email instead of username."""
@@ -54,6 +59,7 @@ class User(AbstractUser):
     telegram_id = models.CharField(max_length=20, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
     profile_pic = models.ImageField(upload_to=profile_pic_image_path, blank=True, null=True)
+    thumbnail_pic = models.ImageField(upload_to=profile_pic_image_path, editable=False, blank=True, null=True)
     year = models.IntegerField(default=1)
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
@@ -62,6 +68,40 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    def save(self, *args, **kwargs):
+        self.create_thumbnail()
+
+        super(User, self).save(*args, **kwargs)
+
+    def create_thumbnail(self):
+        if not self.profile_pic:
+            self.thumbnail_pic = None
+            return
+
+        image = Image.open(self.profile_pic)
+        image.thumbnail(THUMBNAIL_SIZE, Image.ANTIALIAS)
+        thumbnail_name, thumbnail_extension = os.path.splitext(self.profile_pic.name)
+        thumbnail_extension = thumbnail_extension.lower()
+        thumbnail_filename = f'{thumbnail_name}_thumb{thumbnail_extension}'
+
+        if thumbnail_extension in ['.jpg', '.jpeg']:
+            FTYPE = 'JPEG'
+        elif thumbnail_extension == '.gif':
+            FTYPE = 'GIF'
+        elif thumbnail_extension == '.png':
+            FTYPE = 'PNG'
+        else:
+            raise Exception('Unable to create thumbnail. Profile picture must be in JPEG, PNG or GIF format.')
+
+        # Save thumbnail to in-memory file as StringIO
+        temp_thumbnail = BytesIO()
+        image.save(temp_thumbnail, FTYPE)
+        temp_thumbnail.seek(0)
+
+        # set save=False, otherwise it will run in an infinite loop
+        self.thumbnail_pic.save(thumbnail_filename, ContentFile(temp_thumbnail.read()), save=False)
+        temp_thumbnail.close()
 
     def is_connected(self, other_user):
         return self.get_connection_status_with(other_user) == 2

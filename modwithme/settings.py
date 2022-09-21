@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'users',
-    'modules'
+    'modules',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
@@ -170,3 +171,6 @@ OTP_EXPIRATION_DURATION = 60
 # Media, for user uploaded files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Thumbnails
+THUMBNAIL_SIZE = (100, 100)
