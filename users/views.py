@@ -253,7 +253,7 @@ class UserConnectionView(APIView):
         connections = Connection.objects.filter(Q(accepter=user) | Q(requester=user), ~Q(status=Connection_Status['RJ'].value))
 
         type = request.query_params.get('type')
-        module_code = request.query_params.get('module_code')
+        module_query = request.query_params.get('module_code')
 
         if type is not None and type == '0':
             connections = connections.filter(accepter=user, status='PD')
@@ -262,8 +262,8 @@ class UserConnectionView(APIView):
         elif type is not None and type == '2':
             connections = connections.filter(status='AC')
 
-        if module_code is not None:
-            enrolments = Enrolment.objects.filter(module__module_code__icontains=module_code)
+        if module_query is not None:
+            enrolments = Enrolment.objects.filter(Q(module__module_code__icontains=module_query) | Q(module__title__icontains=module_query))
             users = enrolments.values_list('user', flat=True).distinct()
             connections = connections.filter(Q(requester=user, accepter__in=users) | Q(accepter=user, requester__in=users))
         
