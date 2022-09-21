@@ -100,8 +100,8 @@ class OtpSendView(APIView):
             response = Response()
             response['Access-Control-Allow-Origin'] = '*'
             return response
-        elif verification_code and not verification_code.is_expired():
-            remaining_time = round(verification_code.remaining_time())
+        elif verification_code and not verification_code.can_resend():
+            remaining_time = round(verification_code.remaining_time_to_resend())
             response = Response({
                 'error_code': 1,
                 'error_message': f'Please wait {remaining_time} seconds before re-sending the OTP.'

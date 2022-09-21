@@ -34,13 +34,6 @@ ALLOWED_HOSTS = [
     'goldfish-app-4g8cm.ondigitalocean.app',
 ]
 
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -158,27 +151,25 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication', # TODO: remove in production
+        # 'rest_framework.authentication.SessionAuthentication', # For debugging in development
     ],
-    #'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': 20
 }
 
-# Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # TODO: remove in production
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # TODO: enable in production
-# EMAIL_HOST = 'mail.privateemail.com'
-# EMAIL_HOST_USER = 'contact@mydomain.com'
-# EMAIL_HOST_PASSWORD = '***********'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSl = False
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
 SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
+# Email
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # For debugging in development
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
 # OTP
-OTP_EXPIRATION_DURATION = 60
+OTP_EXPIRATION_DURATION = 300
+OTP_RESEND_DURATION = 60
 
 # Media, for user uploaded files
 MEDIA_URL = '/media/'
@@ -187,4 +178,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Thumbnails
 THUMBNAIL_SIZE = (100, 100)
 
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True

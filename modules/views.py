@@ -57,6 +57,7 @@ class ModuleUsersView(APIView):
         name_filter = request.query_params.get('name')
         user_status_filter = request.query_params.get('user_status')
         connection_status_filter = request.query_params.get('connection_status')
+        page_filter = request.query_params.get('page')
         paginator = PageNumberPagination()
         enrolments = Enrolment.objects.all().filter(Q(module__module_code__iexact=module_code), ~Q(user__exact=request.user)).order_by('user')
 
@@ -77,10 +78,11 @@ class ModuleUsersView(APIView):
             users = connections.values_list('requester', flat=True).union(connections.values_list('accepter', flat=True))
             enrolments = enrolments.filter(user__in=users)
 
-        users = User.objects.filter(id__in=enrolments.values_list('user', flat=True).distinct()).order_by('id')
+        queryset = User.objects.filter(id__in=enrolments.values_list('user', flat=True).distinct()).order_by('id')
 
         # all users who are in the module, with filters
-        queryset = paginator.paginate_queryset(users, request)
+        if page_filter:
+            queryset = paginator.paginate_queryset(queryset, request)
         serializer = SimpleUserSerializer(queryset, many=True, context={'user': request.user, 'module_code': module_code})
         response = Response(serializer.data)
         response['Access-Control-Allow-Origin'] = '*'
