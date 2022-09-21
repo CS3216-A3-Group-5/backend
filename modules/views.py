@@ -34,6 +34,20 @@ class ModuleViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = paginator.paginate_queryset(queryset, self.request)
         return queryset
 
+class ModulesView(APIView):
+
+    def get(self, request):
+        queryset = Module.objects.all().order_by('module_code')
+        search_query = self.request.query_params.get('q')
+        paginator = PageNumberPagination()
+        if search_query is not None:
+            queryset = queryset.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query)).order_by('module_code', 'title')
+        queryset = paginator.paginate_queryset(queryset, self.request)
+        serializer = ModuleSerializer(queryset, many=True, context={'user': self.request.user})
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
+
 
 
 class ModuleUsersView(APIView):
@@ -68,7 +82,9 @@ class ModuleUsersView(APIView):
         # all users who are in the module, with filters
         queryset = paginator.paginate_queryset(users, request)
         serializer = SimpleUserSerializer(queryset, many=True, context={'user': request.user, 'module_code': module_code})
-        return Response(serializer.data)
+        response = Response(serializer.data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class ModuleUpdateView(APIView):
     permission_classes = [permissions.IsAdminUser]
@@ -83,7 +99,9 @@ class ModuleUpdateView(APIView):
             new_title = module["title"]
             new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
             new_module.save()
-        return Response(data)
+        response = Response(data)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class ModuleManualUpdateView(APIView):
     permission_classes = [permissions.IsAdminUser]
@@ -99,9 +117,11 @@ class ModuleManualUpdateView(APIView):
                 title = m["title"]
                 new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
                 new_module.save()
-            return Response(Module.objects.all())
+            response = Response(Module.objects.all())
         except:
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+            response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
 
 class ModuleView(APIView):
 
@@ -110,6 +130,9 @@ class ModuleView(APIView):
         try:
             module = Module.objects.get(module_code__iexact=module_code)
             serializer = ModuleSerializer(module, context={'user': user})
-            return Response(serializer.data)
+            response = Response(serializer.data)
         except:
-            return Response("Module not found.", status=status.HTTP_404_NOT_FOUND)
+            response = Response("Module not found.", status=status.HTTP_404_NOT_FOUND)
+        
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
