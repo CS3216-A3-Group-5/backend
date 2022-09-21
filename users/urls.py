@@ -12,6 +12,7 @@ urlpatterns = [
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
     path('user/modules/', views.StudentModulesView.as_view(), name='student_modules'),
     path('user/', views.StudentSelfView.as_view(), name='student_self'),
+    path('user/picture/', views.ProfilePictureView.as_view(), name='profile_picture'),
     path('user/<id>/', views.StudentDetailView.as_view(), name='student_detail'),
     path('user/modules/enroll/', views.StudentEnrollView.as_view(), name='enroll_module'),
     path('user/modules/status/', views.ModuleStatusView.as_view(), name='update_module_status'),

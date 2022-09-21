@@ -46,12 +46,14 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 
 class UserSerializer(SimpleUserSerializer):
     """Encapsulates a serializer that can serialize or deserialize a User without contact details."""
+    profile_pic = serializers.ImageField(read_only=True, use_url=True, required=False, allow_empty_file=True)
 
     class Meta:
         model = User
         fields = [
             'id', 
             'name', 
+            'profile_pic',
             'connection_status', 
             'major',
             'year',
@@ -66,6 +68,7 @@ class PrivateUserSerializer(UserSerializer):
         fields = [
             'id', 
             'name', 
+            'profile_pic',
             'connection_status', 
             'major',
             'year',
@@ -75,3 +78,9 @@ class PrivateUserSerializer(UserSerializer):
             'bio',
         ]
 
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.ImageField(max_length=None, use_url=True, required=False, allow_empty_file=True)
+    
+    class Meta:
+        model = User
+        fields = ['profile_pic',]

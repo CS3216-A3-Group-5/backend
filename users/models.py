@@ -44,13 +44,16 @@ class UserManager(BaseUserManager):
         return self._create_user(nus_email, password, **extra_fields)
 
 class User(AbstractUser):
+    def profile_pic_image_path(instance, filename):
+        return f'user/{instance.id}/{filename}'
+
     username = None
     name = models.CharField(max_length=50)
     nus_email = models.EmailField(unique=True)
     is_verified = models.BooleanField(default=False)
     telegram_id = models.CharField(max_length=20, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
-    #photo = models.ImageField(upload_to='profile_pictures', blank=True)
+    profile_pic = models.ImageField(upload_to=profile_pic_image_path, blank=True, null=True)
     year = models.IntegerField(default=1)
     major = models.CharField(max_length=20)
     bio = models.TextField(blank=True)
