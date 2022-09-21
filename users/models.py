@@ -147,7 +147,7 @@ class Connection(models.Model):
     requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outgoing_connections')
     accepter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='incoming_connections')
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField()
+    creation_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=2,
         choices=CONNECTION_STATUS,

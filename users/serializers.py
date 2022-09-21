@@ -2,6 +2,8 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from modules.serializers import ModuleSerializer
+
 from .models import Connection, Connection_Status, Enrolment, User, User_Status
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -103,3 +105,17 @@ class ProfilePictureSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['profile_pic',]
+
+class ConnectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    module = ModuleSerializer()
+    other_user = serializers.SerializerMethodField()
+
+    def get_other_user(self, obj):
+        user = self.context.get('user')
+        if obj.requester == user:
+            other_user = obj.accepter
+        else:
+            other_user = obj.requester
+        return SimpleUserSerializer(other_user, context={'user': user, 'module_code': obj.module.module_code}).data
+    

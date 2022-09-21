@@ -9,7 +9,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, VerificationCode, Enrolment, Connection
+from modules import serializers
+
+from .models import Connection_Status, User, VerificationCode, Enrolment, Connection
+from .serializers import ConnectionSerializer, RegisterSerializer, UserSerializer
 from .permissions import IsSelf
 from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer, ProfilePictureSerializer
 from modules.serializers import ModuleSerializer
@@ -264,3 +267,84 @@ class ProfilePictureView(APIView):
         user.profile_pic = None
         user.save()
         return Response()
+
+class UserConnectionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        connections = Connection.objects.filter(Q(accepter=user) | Q(requester=user), ~Q(status=Connection_Status['RJ'].value))
+
+        type = request.query_params.get('type')
+        module_code = request.query_params.get('module_code')
+
+        if type is not None and type == '0':
+            connections = connections.filter(accepter=user, status='PD')
+        elif type is not None and type == '1':
+            connections = connections.filter(requester=user, status='PD')
+        elif type is not None and type == '2':
+            connections = connections.filter(status='AC')
+
+        if module_code is not None:
+            enrolments = Enrolment.objects.filter(module__module_code__icontains=module_code)
+            users = enrolments.values_list('user', flat=True).distinct()
+            connections = connections.filter(Q(requester=user, accepter__in=users) | Q(accepter=user, requester__in=users))
+        
+        connections = connections.order_by('creation_time')
+        
+        serializer = ConnectionSerializer(connections, many=True, context={'user': user})
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            module_code = obj["module_code"]
+            module = Module.objects.get(module_code__iexact=module_code)
+            other_user_id = obj["other_user"]
+            other_user = User.objects.get(id=other_user_id)
+
+
+            connection = Connection.objects.filter(Q(requester=user, accepter=other_user) | Q(requester=other_user, accepter=user), module=module)
+            if connection.exists():
+                return Response('A connection between these 2 users already exists for this module.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            elif user.id == other_user_id:
+                return Response('Cannot connect user with themselves', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+            connection = Connection(requester=user, accepter=other_user, module=module, status='PD')
+            connection.save()
+            serializer = ConnectionSerializer(connection, context={'user': user})
+            return Response(serializer.data)
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, format=None):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            connection_id = obj["id"]
+            new_status = Connection_Status(int(obj["status"])).name 
+            
+
+            connection = Connection.objects.filter(id=connection_id)
+            if not connection.exists():
+                return Response('No match for connection id', status=status.HTTP_404_NOT_FOUND)
+            elif not connection.filter(Q(requester=user) | Q(accepter=user)).exists():
+                return Response('User not involved in connection.', status=status.HTTP_401_UNAUTHORIZED)
+            elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.name:
+                return Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            
+            connection.update(status=new_status)
+
+            return Response("Successfully updated status")
+
+        except Exception as e:
+            print(e)
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
