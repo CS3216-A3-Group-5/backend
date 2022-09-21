@@ -1,20 +1,20 @@
-from django.urls import path
+from django.urls import re_path
 from rest_framework_simplejwt import views as jwt_views
 from . import views
 
 urlpatterns = [
-    path('register', views.RegisterView.as_view(), name='register'),
-    path('otp/verify', views.OtpVerifyView.as_view(), name='otp_verify'),
-    path('otp/send', views.OtpSendView.as_view(), name='otp_send'),
-    path('login', views.LoginView.as_view(), name='login'),
-    path('logout', jwt_views.TokenBlacklistView.as_view(), name='logout'),
-    path('token/refresh', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-    path('token/verify', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
-    path('user/modules', views.StudentModulesView.as_view(), name='student_modules'),
-    path('user', views.StudentSelfView.as_view(), name='student_self'),
-    path('user/picture', views.ProfilePictureView.as_view(), name='profile_picture'),
-    path('user/<int:id>', views.StudentDetailView.as_view(), name='student_detail'),
-    path('user/modules/enroll', views.StudentEnrollView.as_view(), name='enroll_module'),
-    path('user/modules/status', views.ModuleStatusView.as_view(), name='update_module_status'),
-    path('user/connections', views.UserConnectionView.as_view(), name='user_connections'),
+    re_path('register/?$', views.RegisterView.as_view(), name='register'),
+    re_path('otp/verify/?$', views.OtpVerifyView.as_view(), name='otp_verify'),
+    re_path('otp/send/?$', views.OtpSendView.as_view(), name='otp_send'),
+    re_path('login/?$', views.LoginView.as_view(), name='login'),
+    re_path('logout/?$', jwt_views.TokenBlacklistView.as_view(), name='logout'),
+    re_path('token/refresh/?$', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+    re_path('token/verify/?$', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
+    re_path('user/modules/?$', views.StudentModulesView.as_view(), name='student_modules'),
+    re_path('user/?$', views.StudentSelfView.as_view(), name='student_self'),
+    re_path('user/picture/?$', views.ProfilePictureView.as_view(), name='profile_picture'),
+    re_path('user/<int:id>/?$', views.StudentDetailView.as_view(), name='student_detail'),
+    re_path('user/modules/enroll/?$', views.StudentEnrollView.as_view(), name='enroll_module'),
+    re_path('user/modules/status/?$', views.ModuleStatusView.as_view(), name='update_module_status'),
+    re_path('user/connections/?$', views.UserConnectionView.as_view(), name='user_connections'),
 ]
