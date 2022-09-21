@@ -34,7 +34,7 @@ ALLOWED_HOSTS = [
     'goldfish-app-4g8cm.ondigitalocean.app',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Application definition
