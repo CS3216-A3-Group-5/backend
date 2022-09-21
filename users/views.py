@@ -269,6 +269,16 @@ class ModuleStatusView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request, format=None):
+        module_code = request.data.get('module_code')
+        user = request.user
+        enrolment = Enrolment.objects.filter(user=user, module__module_code=module_code).first()
+
+        if enrolment is None:
+            return Response({'status': 3})
+        
+        return Response({'status': User_Status[enrolment.status].value})
+
     def put(self, request, format=None):
         user = request.user
         data = request.data
