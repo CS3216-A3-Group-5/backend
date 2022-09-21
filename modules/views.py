@@ -113,11 +113,10 @@ class ModuleManualUpdateView(APIView):
         data = request.data
 
         try:
-            obj = data
             for m in data:
                 module_code = m["module_code"]
                 title = m["title"]
-                new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
+                new_module, created = Module.objects.get_or_create(title=title, module_code=module_code)
                 new_module.save()
             response = Response(Module.objects.all())
         except:
