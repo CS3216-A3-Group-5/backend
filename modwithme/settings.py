@@ -30,7 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'modulekakis-kxgwq.ondigitalocean.app',
+    'modulekakis-kxgwq.ondigitalocean.app/backend',
 ]
 
 
