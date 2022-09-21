@@ -109,17 +109,16 @@ class ModuleManualUpdateView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, academic_year):
-        user = request.user
         data = request.data
-
         try:
             for m in data:
-                module_code = m["module_code"]
+                module_code = m["moduleCode"]
                 title = m["title"]
                 new_module, created = Module.objects.get_or_create(title=title, module_code=module_code)
                 new_module.save()
-            response = Response(Module.objects.all())
-        except:
+            response = Response(data)
+        except Exception as e:
+            print(e)
             response = Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
         response['Access-Control-Allow-Origin'] = '*'
         return response
