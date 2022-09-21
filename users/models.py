@@ -187,13 +187,10 @@ class VerificationCode(models.Model):
         send_mail(
             'Your verification code for Mod With Me',
             f'Your verification code is: {self.code}',
-            'no-reply@modwithme.com',
+            'reply.no@engineer.com',
             [self.user.nus_email],
             fail_silently=False,
         )
-    
-    def remaining_time(self):
-        return settings.OTP_EXPIRATION_DURATION - self.elapsed_time()
 
     def elapsed_time(self):
         time_delta = timezone.now() - self.creation_time
@@ -201,5 +198,11 @@ class VerificationCode(models.Model):
     
     def is_expired(self):
         return self.elapsed_time() > settings.OTP_EXPIRATION_DURATION
+
+    def can_resend(self):
+        return self.elapsed_time() > settings.OTP_RESEND_DURATION
+
+    def remaining_time_to_resend(self):
+        return settings.OTP_RESEND_DURATION - self.elapsed_time()
 
     objects = VerificationCodeManager()

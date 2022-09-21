@@ -154,27 +154,27 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication', # TODO: remove in production
+        # 'rest_framework.authentication.SessionAuthentication', # For debugging in development
     ],
     #'DEFAULT_PAGINATION_CLASS': None,
     'PAGE_SIZE': 20
 }
 
 # Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # TODO: remove in production
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # TODO: enable in production
-# EMAIL_HOST = 'mail.privateemail.com'
-# EMAIL_HOST_USER = 'contact@mydomain.com'
-# EMAIL_HOST_PASSWORD = '***********'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSl = False
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # For debugging in development
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
 
 SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 # OTP
-OTP_EXPIRATION_DURATION = 60
+OTP_EXPIRATION_DURATION = 300
+OTP_RESEND_DURATION = 60
 
 # Media, for user uploaded files
 MEDIA_URL = '/media/'

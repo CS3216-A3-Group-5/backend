@@ -83,8 +83,8 @@ class OtpSendView(APIView):
             return Response()
         elif user.is_verified:
             return Response()
-        elif verification_code and not verification_code.is_expired():
-            remaining_time = round(verification_code.remaining_time())
+        elif verification_code and not verification_code.can_resend():
+            remaining_time = round(verification_code.remaining_time_to_resend())
             return Response({
                 'error_code': 1,
                 'error_message': f'Please wait {remaining_time} seconds before re-sending the OTP.'
