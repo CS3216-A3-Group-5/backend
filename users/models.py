@@ -172,7 +172,7 @@ class VerificationCodeManager(models.Manager):
         for i in range(6):
             code += digits[math.floor(random.random() * 10)]
 
-        return int(code)
+        return code
 
     def create(self, user):
         code = VerificationCodeManager.generate_code()
@@ -180,7 +180,7 @@ class VerificationCodeManager(models.Manager):
 
 class VerificationCode(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification_code')
-    code = models.PositiveSmallIntegerField()
+    code = models.CharField(max_length=6)
     creation_time = models.DateTimeField(auto_now_add=True)
 
     def send(self):
