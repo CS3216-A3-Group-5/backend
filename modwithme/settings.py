@@ -30,7 +30,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'modulekakis-kxgwq.ondigitalocean.app/backend',
+    'modulekakis-kxgwq.ondigitalocean.app',
+    'goldfish-app-4g8cm.ondigitalocean.app',
 ]
 
 
