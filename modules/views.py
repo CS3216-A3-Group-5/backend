@@ -85,6 +85,24 @@ class ModuleUpdateView(APIView):
             new_module.save()
         return Response(data)
 
+class ModuleManualUpdateView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, academic_year):
+        user = request.user
+        data = request.data
+
+        try:
+            obj = data
+            for m in data:
+                module_code = m["module_code"]
+                title = m["title"]
+                new_module, created = Module.objects.get_or_create(title=new_title, module_code=new_module_code)
+                new_module.save()
+            return Response(Module.objects.all())
+        except:
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
 class ModuleView(APIView):
 
     def get(self, request, module_code):
