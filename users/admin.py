@@ -27,7 +27,10 @@ class UserAdmin(DjangoUserAdmin):
             'fields': ('last_login', 'date_joined')
         }),
         ('Additional info', {
-            'fields': ('is_verified',)
+            'fields': (
+                'is_verified',
+                'profile_pic'
+                )
         })
     )
     list_display = ('nus_email', 'username', 'last_name', 'is_staff')

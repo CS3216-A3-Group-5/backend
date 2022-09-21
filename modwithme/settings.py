@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+import os.path
 
 from pathlib import Path
 from datetime import timedelta
@@ -44,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'users',
-    'modules'
+    'modules',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
@@ -165,3 +167,10 @@ SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 # OTP
 OTP_EXPIRATION_DURATION = 60
+
+# Media, for user uploaded files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Thumbnails
+THUMBNAIL_SIZE = (100, 100)

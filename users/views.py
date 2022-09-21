@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -13,7 +14,7 @@ from modules import serializers
 from .models import Connection_Status, User, VerificationCode, Enrolment, Connection
 from .serializers import ConnectionSerializer, RegisterSerializer, UserSerializer
 from .permissions import IsSelf
-from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer
+from .serializers import RegisterSerializer, UserSerializer, PrivateUserSerializer, ProfilePictureSerializer
 from modules.serializers import ModuleSerializer
 from modules.models import Module
 from modules.views import User_Status
@@ -243,6 +244,29 @@ class ModuleStatusView(APIView):
         except Exception as e:
             print(e)
             return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+
+class ProfilePictureView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        user = request.user
+        serializer = ProfilePictureSerializer(user)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user = request.user
+        serializer = ProfilePictureSerializer(user, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        user.profile_pic = None
+        user.save()
+        return Response()
 
 class UserConnectionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
