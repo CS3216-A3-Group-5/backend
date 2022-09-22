@@ -25,14 +25,18 @@ class RegisterView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         nus_email = request.data.get('nus_email')
-        nus_email_is_already_used = User.objects.filter(nus_email=nus_email).exists()
+        user = User.objects.filter(nus_email=nus_email).first()
+        response = Response()
+        response['Access-Control-Allow-Origin'] = '*'
 
-        if nus_email_is_already_used:
+        if user and user.is_verified:
             response = Response({
                 'error_code': 1,
                 'error_message': 'Email is already in use.'
             })
             response['Access-Control-Allow-Origin'] = '*'
+            return response
+        elif user and not user.is_verified:
             return response
 
         serializer = self.get_serializer(data=request.data)
@@ -42,8 +46,6 @@ class RegisterView(generics.GenericAPIView):
         verification_code = VerificationCode.objects.create(user=user)
         verification_code.send()
 
-        response = Response(serializer.data)
-        response['Access-Control-Allow-Origin'] = '*'
         return response
 
 class OtpVerifyView(APIView):
