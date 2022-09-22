@@ -431,7 +431,7 @@ class UserConnectionView(APIView):
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
 
-            if new_status == 0:
+            if new_status == Connection_Status("RJ").name:
                 connection.delete()
             else:
                 connection.update(status=new_status)
