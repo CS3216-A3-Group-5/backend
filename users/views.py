@@ -271,13 +271,8 @@ class ModuleStatusView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, format=None):
-        user = request.user
-        data = request.data
-        try:
-            module_code = data['module_code']
-        except:
-            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, module_code, format=None):
+        user = request.user        
         
         enrolment = Enrolment.objects.filter(user=user, module__module_code=module_code).first()
 
@@ -286,13 +281,12 @@ class ModuleStatusView(APIView):
         
         return Response({'status': User_Status[enrolment.status].value})
 
-    def put(self, request, format=None):
+    def put(self, request, module_code, format=None):
         user = request.user
         data = request.data
 
         try:
             obj = data
-            module_code = obj["module_code"]
             module = Module.objects.get(module_code__iexact=module_code)
             user_status = obj["status"]
             user_status = User_Status(user_status).name

@@ -15,6 +15,6 @@ urlpatterns = [
     re_path('user/picture/?$', views.ProfilePictureView.as_view(), name='profile_picture'),
     re_path(r'user/(?P<id>\d+)/?$', views.StudentDetailView.as_view(), name='student_detail'),
     re_path('user/modules/enroll/?$', views.StudentEnrollView.as_view(), name='enroll_module'),
-    re_path('user/modules/status/?$', views.ModuleStatusView.as_view(), name='update_module_status'),
+    re_path(r'user/modules/status/(?P<module_code>\w+)/?$', views.ModuleStatusView.as_view(), name='update_module_status'),
     re_path('user/connections/?$', views.UserConnectionView.as_view(), name='user_connections'),
 ]
