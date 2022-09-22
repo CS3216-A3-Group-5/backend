@@ -154,7 +154,7 @@ class StudentModulesView(APIView):
 
         modules = Module.objects.filter(id__in=enrolment.values('module'))
 
-        if search_query is not None:
+        if search_query:
             modules = modules.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query))
         
         queryset = paginator.paginate_queryset(modules, request)
@@ -219,6 +219,8 @@ class StudentEnrollView(generics.CreateAPIView):
             module_code = obj["module_code"]
             module = Module.objects.get(module_code__iexact=module_code)
             user_status = User_Status(0).name
+
+            print(Enrolment.objects.filter(user=user, module=module))
 
             if Enrolment.objects.filter(user=user, module=module).exists():
                 response = Response('User is already enrolled in this module', status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -350,14 +352,14 @@ class UserConnectionView(APIView):
         type = request.query_params.get('type')
         module_query = request.query_params.get('module_code')
 
-        if type is not None and type == '0':
+        if type and type == '0':
             connections = connections.filter(accepter=user, status='PD')
-        elif type is not None and type == '1':
+        elif type and type == '1':
             connections = connections.filter(requester=user, status='PD')
-        elif type is not None and type == '2':
+        elif type and type == '2':
             connections = connections.filter(status='AC')
 
-        if module_query is not None:
+        if module_query:
             enrolments = Enrolment.objects.filter(Q(module__module_code__icontains=module_query) | Q(module__title__icontains=module_query))
             users = enrolments.values_list('user', flat=True).distinct()
             connections = connections.filter(Q(requester=user, accepter__in=users) | Q(accepter=user, requester__in=users))

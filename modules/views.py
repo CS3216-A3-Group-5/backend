@@ -29,7 +29,7 @@ class ModuleViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Module.objects.all().order_by('module_code')
         search_query = self.request.query_params.get('q')
         paginator = PageNumberPagination()
-        if search_query is not None:
+        if search_query:
             queryset = queryset.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query)).order_by('module_code', 'title')
         queryset = paginator.paginate_queryset(queryset, self.request)
         return queryset
@@ -40,7 +40,7 @@ class ModulesView(APIView):
         queryset = Module.objects.all().order_by('module_code')
         search_query = self.request.query_params.get('q')
         paginator = PageNumberPagination()
-        if search_query is not None:
+        if search_query:
             queryset = queryset.filter(Q(title__icontains=search_query) | Q(module_code__icontains=search_query)).order_by('module_code', 'title')
         queryset = paginator.paginate_queryset(queryset, self.request)
         serializer = ModuleSerializer(queryset, many=True, context={'user': self.request.user})
@@ -61,16 +61,16 @@ class ModuleUsersView(APIView):
         paginator = PageNumberPagination()
         enrolments = Enrolment.objects.all().filter(Q(module__module_code__iexact=module_code), ~Q(user__exact=request.user)).order_by('user')
 
-        if name_filter is not None:
+        if name_filter:
             enrolments = enrolments.filter(Q(user__first_name__icontains=name_filter) | Q(user__last_name__icontains=name_filter))
-        if user_status_filter is not None:
+        if user_status_filter:
             status = User_Status(int(user_status_filter)).name
             enrolments = enrolments.filter(status__iexact=status)
         # Don't include enrolments of users not looking for matches.
         enrolments = enrolments.exclude(status__iexact='NL')
 
         
-        if connection_status_filter is not None:
+        if connection_status_filter:
             # all connections where request.user is involved in, for target module_code, and target connection_status
             connections = Connection.objects.filter(Q(requester=request.user) | Q(accepter=request.user), module__module_code__iexact=module_code)
             status = Connection_Status(int(connection_status_filter)).name
