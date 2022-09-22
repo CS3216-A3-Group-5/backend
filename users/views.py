@@ -382,9 +382,9 @@ class UserConnectionView(APIView):
             other_user = User.objects.get(id=other_user_id)
 
 
-            connection = Connection.objects.filter(Q(requester=user, accepter=other_user) | Q(requester=other_user, accepter=user), module=module)
+            connection = Connection.objects.filter(Q(requester=user, accepter=other_user) | Q(requester=other_user, accepter=user))
             if connection.exists():
-                response = Response('A connection between these 2 users already exists for this module.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                response = Response('A connection between these 2 users already exists.', status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
             elif user.id == other_user_id:
@@ -424,12 +424,15 @@ class UserConnectionView(APIView):
                 response = Response('User not involved in connection.', status=status.HTTP_401_UNAUTHORIZED)
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
-            elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.name:
+            elif connection.filter(requester=user).exists() and new_status == Connection_Status.AC.value:
                 response = Response('Requester cannot accept connection', status=status.HTTP_405_METHOD_NOT_ALLOWED)
                 response['Access-Control-Allow-Origin'] = '*'
                 return response
-            
-            connection.update(status=new_status)
+
+            if new_status == 0:
+                connection.delete()
+            else:
+                connection.update(status=new_status)
 
             response = Response("Successfully updated status")
             response['Access-Control-Allow-Origin'] = '*'
