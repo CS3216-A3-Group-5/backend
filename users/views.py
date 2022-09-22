@@ -272,8 +272,13 @@ class ModuleStatusView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
-        module_code = request.data.get('module_code')
         user = request.user
+        data = request.data
+        try:
+            module_code = data['module_code']
+        except:
+            return Response("Invalid request", status=status.HTTP_400_BAD_REQUEST)
+        
         enrolment = Enrolment.objects.filter(user=user, module__module_code=module_code).first()
 
         if enrolment is None:
