@@ -351,7 +351,7 @@ class UserConnectionView(APIView):
         connections = Connection.objects.filter(Q(accepter=user) | Q(requester=user), ~Q(status=Connection_Status['RJ'].value))
 
         type = request.query_params.get('type')
-        module_query = request.query_params.get('module_code')
+        module_query = request.query_params.get('q')
 
         if type and type == '0':
             connections = connections.filter(accepter=user, status='PD')
