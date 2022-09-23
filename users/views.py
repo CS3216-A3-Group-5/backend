@@ -93,14 +93,10 @@ class OtpSendView(APIView):
         nus_email = request.data.get('nus_email')
         user = User.objects.filter(nus_email=nus_email).first()
         verification_code = VerificationCode.objects.filter(user__nus_email=nus_email).first()
+        response = Response()
+        response['Access-Control-Allow-Origin'] = '*'
 
-        if not user:
-            response = Response()
-            response['Access-Control-Allow-Origin'] = '*'
-            return response
-        elif user.is_verified:
-            response = Response()
-            response['Access-Control-Allow-Origin'] = '*'
+        if not user or user.is_verified:
             return response
         elif verification_code and not verification_code.can_resend():
             remaining_time = round(verification_code.remaining_time_to_resend())
@@ -116,8 +112,6 @@ class OtpSendView(APIView):
         verification_code = VerificationCode.objects.create(user=user)
         verification_code.send()
 
-        response = Response()
-        response['Access-Control-Allow-Origin'] = '*'
         return response
 
 class LoginView(TokenObtainPairView):
